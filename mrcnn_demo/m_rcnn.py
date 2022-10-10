@@ -15,7 +15,7 @@ import shutil
 import zipfile
 
 # Root directory of the project
-ROOT_DIR = Path(os.path.abspath(__file__)).parents[1]
+ROOT_DIR = str(Path(os.path.abspath(__file__)).parents[1])
 print("VERS 0.4 - updated 04/08/2022")
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
