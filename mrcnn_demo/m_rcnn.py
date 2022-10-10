@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import sys
 import random
 import math
@@ -14,7 +15,7 @@ import shutil
 import zipfile
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("/content/maskrcnn_colab")
+ROOT_DIR = Path(os.path.abspath(__file__)).parents[1]
 print("VERS 0.4 - updated 04/08/2022")
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -39,14 +40,12 @@ if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
 
-
-
 class CustomConfig(Config):
     def __init__(self, num_classes):
 
         if num_classes > 1:
             raise ValueError("{} classes were found. This is only a DEMO version for evaluation purposes, and it only supports 1 class. Get the PRO version to"
-                  " continue the training: https://pysource.com/mask-rcnn-training-pro/ ".format(num_classes))
+                             " continue the training: https://pysource.com/mask-rcnn-training-pro/ ".format(num_classes))
 
         classes_number = num_classes
         super().__init__()
@@ -88,10 +87,11 @@ class CustomConfig(Config):
     DETECTION_MIN_CONFIDENCE = 0.9
 
 
-
 """
 NOTEBOOK PREFERENCES
 """
+
+
 def get_ax(rows=1, cols=1, size=8):
     """Return a Matplotlib Axes array to be used in
     all visualizations in the notebook. Provide a
@@ -121,7 +121,6 @@ class CustomDataset(utils.Dataset):
         json_file = open(annotation_json)
         coco_json = json.load(json_file)
         json_file.close()
-
 
         # Add the class names using the base method from utils.Dataset
         source_name = "coco_like"
@@ -166,9 +165,11 @@ class CustomDataset(utils.Dataset):
                     image_width = image['width']
                     image_height = image['height']
                 except KeyError as key:
-                    print("Warning: Skipping image (id: {}) with missing key: {}".format(image_id, key))
+                    print("Warning: Skipping image (id: {}) with missing key: {}".format(
+                        image_id, key))
 
-                image_path = os.path.abspath(os.path.join(images_dir, image_file_name))
+                image_path = os.path.abspath(
+                    os.path.join(images_dir, image_file_name))
                 image_annotations = annotations[image_id]
 
                 # Add the image using the base method from utils.Dataset
@@ -224,6 +225,7 @@ class CustomDataset(utils.Dataset):
         class_number = len(class_ids)
         return class_number
 
+
 def load_training_model(config):
     model = modellib.MaskRCNN(mode="training", config=config,
                               model_dir=MODEL_DIR)
@@ -255,7 +257,9 @@ def display_image_samples(dataset_train):
     for image_id in image_ids:
         image = dataset_train.load_image(image_id)
         mask, class_ids = dataset_train.load_mask(image_id)
-        visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names)
+        visualize.display_top_masks(
+            image, mask, class_ids, dataset_train.class_names)
+
 
 def load_image_dataset(annotation_path, dataset_path, dataset_type):
     dataset_train = CustomDataset()
@@ -270,16 +274,18 @@ def load_image_dataset(annotation_path, dataset_path, dataset_type):
 # which layers to train by name pattern.
 def train_head(model, dataset_train, dataset_val, config):
     model.train(dataset_train, dataset_val,
-            learning_rate=config.LEARNING_RATE,
-            epochs=5,
-            layers='heads')
+                learning_rate=config.LEARNING_RATE,
+                epochs=5,
+                layers='heads')
 
 
 """ DETECTION TEST YOUR MODEL """
 
+
 class InferenceConfig(CustomConfig):
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
+
 
 def extract_images(my_zip, output_dir):
     # Make directory if it doesn't exist
@@ -319,6 +325,7 @@ def load_test_model(num_classes):
     model.load_weights(model_path, by_name=True)
     return model, inference_config
 
+
 def load_inference_model(num_classes, model_path):
     inference_config = InferenceConfig(num_classes)
 
@@ -336,6 +343,7 @@ def load_inference_model(num_classes, model_path):
     print("Loading weights from ", model_path)
     model.load_weights(model_path, by_name=True)
     return model, inference_config
+
 
 def test_random_image(test_model, dataset_val, inference_config):
     image_id = random.choice(dataset_val.image_ids)
@@ -359,6 +367,3 @@ def test_random_image(test_model, dataset_val, inference_config):
     print("Annotation")
     visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id,
                                 dataset_val.class_names, figsize=(8, 8))
-
-
-
